@@ -1,0 +1,7 @@
+*.pyo
+*.pyc
+*.pyd
+*.exe
+*.dll
+*.log
+dist/IMG
