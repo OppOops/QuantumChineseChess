@@ -1,27 +1,18 @@
 ﻿#-*- encoding: utf-8 -*-
-
 import sys, string, os
 import pygame
-import datetime
 import copy
 import random
 from types import *
 from pygame.locals import *
 from ChessGlobal import *
 from Chessman import *
-from NetworkChs import *
-from GraphSearch import *
-
-import socket
+from ChessFactory import *
+from ObjectManager import *
 
 class ChessBoard:
 	
-	# _movesteps = MOVE_CLASSICAL
-	#当前要走棋的棋子颜色，初始化为红色
 	curStepColor = CHESSMAN_COLOR_RED
-	#下棋源   0--鼠标点击，1--网络信息
-	moveFrom = 0
-	_board = dict()
 	tipInfo = ''
 	condition = None
 	showProb = False
@@ -32,44 +23,14 @@ class ChessBoard:
 		self.circle    = circleImg
 		self.condition = ChessBoardCondition(self)
 		self.resetBorad()
-		self.egraph    = Graph()
-			
+	
 	def resetBorad(self):
-		self.curStepColor = CHESSMAN_COLOR_RED
-		self._board = {
-						   (0, 0):ChessmanJu(self, CHESSMAN_COLOR_RED,0, 0),  \
-						   (0, 1):ChessmanMa(self, CHESSMAN_COLOR_RED,      0, 1),  \
-						   (0, 2):ChessmanXiang(self, CHESSMAN_COLOR_RED,   0, 2),  \
-						   (0, 3):ChessmanShi(self, CHESSMAN_COLOR_RED,     0, 3),  \
-						   (0, 4):ChessmanJiang(self, CHESSMAN_COLOR_RED,   0, 4),  \
-						   (0, 5):ChessmanShi(self, CHESSMAN_COLOR_RED,     0, 5),  \
-						   (0, 6):ChessmanXiang(self, CHESSMAN_COLOR_RED,   0, 6),  \
-						   (0, 7):ChessmanMa(self, CHESSMAN_COLOR_RED,      0, 7),  \
-						   (0, 8):ChessmanJu(self, CHESSMAN_COLOR_RED,      0, 8),  \
-						   (9, 0):ChessmanJu(self, CHESSMAN_COLOR_BLACK,    9, 0 ),  \
-						   (9, 1):ChessmanMa(self, CHESSMAN_COLOR_BLACK,    9, 1),  \
-						   (9, 2):ChessmanXiang(self, CHESSMAN_COLOR_BLACK, 9, 2),  \
-						   (9, 3):ChessmanShi(self, CHESSMAN_COLOR_BLACK,   9, 3),  \
-						   (9, 4):ChessmanJiang(self, CHESSMAN_COLOR_BLACK, 9, 4),  \
-						   (9, 5):ChessmanShi(self, CHESSMAN_COLOR_BLACK, 9, 5),  \
-						   (9, 6):ChessmanXiang(self, CHESSMAN_COLOR_BLACK, 9, 6),  \
-						   (9, 7):ChessmanMa(self, CHESSMAN_COLOR_BLACK, 9, 7),  \
-						   (9, 8):ChessmanJu(self, CHESSMAN_COLOR_BLACK, 9, 8),  \
-						   (2, 1):ChessmanPao(self, CHESSMAN_COLOR_RED, 2, 1),  \
-						   (2, 7):ChessmanPao(self, CHESSMAN_COLOR_RED, 2, 7),  \
-						   (7, 1):ChessmanPao(self, CHESSMAN_COLOR_BLACK, 7, 1),  \
-						   (7, 7):ChessmanPao(self, CHESSMAN_COLOR_BLACK, 7, 7),  \
-						   (3, 0):ChessmanBing(self, CHESSMAN_COLOR_RED, 3, 0),  \
-						   (3, 2):ChessmanBing(self, CHESSMAN_COLOR_RED, 3, 2),  \
-						   (3, 4):ChessmanBing(self, CHESSMAN_COLOR_RED, 3, 4),  \
-						   (3, 6):ChessmanBing(self, CHESSMAN_COLOR_RED, 3, 6),  \
-						   (3, 8):ChessmanBing(self, CHESSMAN_COLOR_RED, 3, 8),  \
-						   (6, 0):ChessmanBing(self, CHESSMAN_COLOR_BLACK, 6, 0),  \
-						   (6, 2):ChessmanBing(self, CHESSMAN_COLOR_BLACK, 6, 2),  \
-						   (6, 4):ChessmanBing(self, CHESSMAN_COLOR_BLACK, 6, 4),  \
-						   (6, 6):ChessmanBing(self, CHESSMAN_COLOR_BLACK, 6, 6),  \
-						   (6, 8):ChessmanBing(self, CHESSMAN_COLOR_BLACK, 6, 8),  \
-		}
+		self.mgr          = ObjectManager()
+		self._board       = ChessBoardStart.initBoard()
+		self.curStepColor = ChessBoardStart.initColor()
+		cb = ClassicalChessBuilder(self.mgr)
+		for pos, chess in self._board:
+			self._board[pos] = cb.build(chess)
 	
 	def __redrawBorad(self, window):
 		
@@ -79,17 +40,18 @@ class ChessBoard:
 		#顯示所有棋子
 		font = pygame.font.SysFont('Arial', 24)
 		for key in self._board.keys():
-			chessman = self._board[key]
+			chessman = self._getChess(Position(key))
 			if chessman == None:
-				continue;
+				continue
 			leftTop = posToLeftTop(Position(key[0], key[1]))
 			image, rc = chessman.getImage()
 			window.blit(image, leftTop)
 			if chessman.color == self.curStepColor:
 				window.blit(self.circle, leftTop)
 		#顯示所有棋子機率
-			if self.showProb and chessman._probability != 1.0:
-				probString = '{:d}'.format(int(round(chessman._probability * 100))) + '%'
+			prob = chessman.getProbability(self.mgr)
+			if self.showProb and prob != 1.0:
+				probString = '{:d}'.format(int(round(prob * 100))) + '%'
 				text = font.render(probString, 1, (0, 0, 255))
 				window.blit(text, leftTop)
 		
@@ -115,18 +77,11 @@ class ChessBoard:
 			
 	# Classical move: move the piece (without checking capture)
 	def sendChessMove(self, pos, posTo):
-		# 當這個步驟是符合規則的時候:
-		# 吃子 / 移動:
-			# 1. Path上所有棋子都要被觀測
-			# 2. 起點/終點如果有superPosition要被觀測
-			# 3. 以上瞬間發生
-			# 觀測結束後，重新判斷是否有成功
-		# 重新判斷:
-			# 起點是否存在, 終點是否到達?
 		self.__changeColor()
 		chessman = self._getChess(pos)
 		if self.condition.entangleCondition(pos, posTo):
-			self.EntangelGen(pos, posTo)
+			p1 = [pos, posTo]
+			self.EntangleGen(chessman, posTo, isQuantum=False, p1)
 			return
 		
 		measureList = self._getChessmanList( [pos] + chessman.Path(pos, posTo) + [posTo] )
@@ -154,17 +109,15 @@ class ChessBoard:
 		chessman   = self._getChess(pos)
 		Econd      = self.condition.QuantumEntangleCondition
 		if Econd(pos, mpos, chessman) and Econd(mpos, posTo, chessman):
-			self.EntangelGen(pos, posTo, midPos=mpos)
-			return
+			p1 = [pos, mpos]
+			p2 = [mpos, posTo]
+			self.EntangleGen(chessman, posTo, isQuantum=True, p1, p2)
 		elif Econd(pos, mpos, chessman):
-			self.EntangelGen(pos, mpos, endPos=posTo)
-			return
+			self.EntangleGen(chessman, posTo, isQuantum=True, p1=[pos, mpos])
 		elif Econd(mpos, posTo, chessman):
-			self.EntangelGen(mpos, posTo, sPos=pos)
-			return
-			
-		c2 = chessman.createSuperposition(posTo)
-		self._board[posTo.toList()] = c2
+			self.EntangleGen(chessman, posTo, isQuantum=True, p1=[mpos, posTo])
+		else:
+			self.QuantumChessGen(chessman, posTo)
 		
 	def __changeColor(self):
 		#换方下棋
@@ -186,7 +139,8 @@ class ChessBoard:
 		return copy.copy(self._getChess(pos))
 	
 	def _getChess(self, pos): #private API
-		return self._board.get(pos.toList(), None)
+		id = self._board.get(pos.toList(), -1)
+		return self.mgr.get(id)
 
 	def _getChessmanList(self, posList):
 		chessList = [ self._getChess(pos) for pos in posList]
@@ -194,74 +148,59 @@ class ChessBoard:
 		
 	def measure(self, measureList):
 		observer = ChessObserver(self)
-		observer.observe(measureList, self.egraph)
+		for ch in measureList:
+			ch.measure(observer, self.mgr)
+		self.checkDependency(observer)
 		return observer.getResult()
-			
-	def EntangelGen(self, pos, posTo, midPos=None, endPos=None, sPos=None):
-		if endPos == None:
-			target = posTo
-		else:
-			target = endPos
-		if sPos == None:
-			source = pos
-		else:
-			source = sPos
-			
-		chessman   = self._getChess(source)
-		c2         = chessman.createSuperposition(target)
-		self._board[target.toList()] = c2
-		if midPos!=None:
-			clist		 = [self._getChess(pos)]
-			clist 		+= chessman.chessBetweenPath(pos, midPos)
-			clist 		+= chessman.chessBetweenPath(midPos, posTo)
-			clist		+= [self._getChess(target)]
-			self.egraph.buildVertex(clist, self, isQuantumMove=True)
-		else:
-			clist		 = [self._getChess(source)]
-			clist       += chessman.chessBetweenPath(pos, posTo)
-			clist		+= [self._getChess(target)]
-			if endPos != None or sPos!= None:
-				self.egraph.buildVertex(clist, self, isQuantumMove=True)
-			else:
-				self.egraph.buildVertex(clist, self, isQuantumMove=False)
-
+	
+	def checkDependency(self, observer):
+		allChess = [ self.mgr.get(id) for id in self.__board.values() if id]
+		allChess = [ ch for ch in allChess if ch._removed==False ]
+		allSup   = list(set([ch.sid for ch in allChess]))
+		for sup in allSup:
+			sup.checkDependency(observer, self.mgr)
+	
+	def EntangleGen(self, chess, TargetPos, isQuantum, p1=[], p2=[]):
+		observer = ChessObserver(self)
+		factory  = ChessFactory(self)
+		newChess = factory.buildChess(chess, TargetPos, isQuantum, p1, p2)
+		
+		observer.append([newChess], [])
+		self.updateChessBoard(observer.getResult())
+		
+	def QuantumChessGen(self, chess, TargetPos):
+		observer = ChessObserver(self)
+		factory  = ChessFactory(self)
+		newChess = factory.buildChess(chess, TargetPos, True)
+		
+		observer.append([newChess], [])
+		self.updateChessBoard(observer.getResult())
+	
 class ChessBoardCondition: #判斷盤面情況，不會修改到盤面
 	def __init__(self, chessboard):
 		self.__board = chessboard
 	
+	def getManager(self):
+		return self.__board.mgr
+	
 	def getChessman(self, pos):
 		return self.__board.getChessman(pos)
-	def _getChessman(self, pos):
-		chess = self.__board._getChess(pos)
-		if chess != None and chess._removed==False:
-			return chess
-		else:
-			return None
 			
 	def filterbySameSup(self, clist, ptr):
-		sup = ptr._superpositions
-		return [ch for ch in clist if ch._superpositions!=sup and ch!=ptr] 
+		sup = ptr.sid
+		return [ch for ch in clist if ch.sid!=sup and ch.id!=ptr.id] 
 	
 	def copyBoard(self):
-		newBoard  = copy.deepcopy(self.__board._board)
+		newBoard   = copy.copy(self.__board._board)
+		newManager = copy.copy(self.__board.mgr)
 		moveColor = self.__board.curStepColor
-		posList   = [Position(i%10, i//10) for i in range(0,90) ]
-		chessList = [self._getChessman(pos) for pos in posList  ]
-		chessList = [chess for chess in chessList if chess!=None]
-		for c in chessList:
-			if c.hasSuperpositions():
-				posList      = c.getSupLocationList()
-				newchessList = [newBoard[pos.toList()] for pos in posList]
-				for n in newchessList:
-					n._superpositions = newchessList
-		newGraph = copy.deepcopy(self.__board.egraph)
-		newGraph.copy(newBoard)
-		return {'board':newBoard, 'color':moveColor, 'graph':newGraph}
+		for key,val in newManager.list.items():
+			newManager.list[key] = copy.copy(val)
+		return {'board':newBoard,
+			    'color':moveColor,
+				'manager':newManager}
 	
 	def moveChessColorJudge(self, pos):
-		'''
-		判断当前选中棋子是否和允许下的棋子颜色相同，不同不允许走棋
-		'''
 		chessman = self.__board.getChessman(pos)
 		if chessman == None:
 			return 1
@@ -271,33 +210,33 @@ class ChessBoardCondition: #判斷盤面情況，不會修改到盤面
 			return 1
 			
 	def chessBetweenPath(self, vlist):
-		chessInPath = [self._getChessman(pos) for pos in vlist]
+		chessInPath = [self.getChessman(pos) for pos in vlist]
 		return [chess for chess in chessInPath if chess]
 		
 	def entangleCondition(self, pos, posTo):
-		chessmanTo  = self._getChessman(posTo)
-		chessman    = self._getChessman(pos)
+		mgr			= self.__board.mgr
+		chessmanTo  = self.getChessman(posTo)
+		chessman    = self.getChessman(pos)
 		if(chessmanTo != None): #Should Be measured, since capture operation is performed
 			return False
-		elif not chessman.hasSuperpositions(): #entangle must have superposition
+		elif not chessman.hasSuperpositions(mgr): #entangle must have superposition
 			return False
 		clist = chessman.chessBetweenPath(pos, posTo)
 		clist = self.filterbySameSup(clist, chessman)
 		if clist == []:
 			return False
 		for c in clist:
-			if not c.hasSuperpositions():
+			if not c.hasSuperpositions(mgr):
 				return False
 		return True
 		
 	def QuantumEntangleCondition(self, pos, posTo, chessman):
-		tmpChess      = copy.copy(chessman)
-		tmpChess._pos = pos
-		clist = tmpChess.chessBetweenPath(pos, posTo)
+		mgr	  = self.__board.mgr
+		clist = chessman.chessBetweenPath(pos, posTo)
 		clist = self.filterbySameSup(clist, chessman)
 		if clist == []:
 			return False
 		for c in clist:
-			if not c.hasSuperpositions():
+			if not c.hasSuperpositions(mgr):
 				return False
 		return True

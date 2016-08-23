@@ -50,9 +50,9 @@ class PreviousBoardRecord:
 		if self.rep == []:
 			return False
 		state = self.rep.pop()
-		chessBoard._board = state['board']
+		chessBoard._board       = state['board']
 		chessBoard.curStepColor = state['color']
-		chessBoard.egraph       = state['graph']
+		chessBoard.mgr          = state['manager']
 		return True
 
 class BoardStageInterface:
@@ -130,6 +130,7 @@ class BoardStageClassical(BoardStageInterface):
 
 	# Draw all possible moves of the selected piece
 	def draw(self, window):
+		mgr		 = self._chessBoard.mgr
 		chessman = self._chessBoard.getChessman(self._pos)
 		assert chessman != None
 		for r in range(0, 10):
@@ -141,7 +142,7 @@ class BoardStageClassical(BoardStageInterface):
 				if chessman.ChessMoveJudge(pos) == 1:
 					img, rc = load_image("./IMG/curPos-blue.png", 0xffffff)
 					window.blit(img, posToLeftTop(pos))
-		for pos in chessman.getSupLocationList():
+		for pos in chessman.getSupLocationList(mgr):
 			img, rc = load_image("./IMG/curPos-yellow.png", 0xffffff)
 			window.blit(img, posToLeftTop(pos))
 
@@ -180,6 +181,7 @@ class BoardStageQuantum(BoardStageInterface):
 
 	# Draw all possible moves of the selected piece, also the mid move
 	def draw(self, window):
+		mgr		 = self._chessBoard.mgr
 		chessman = self._chessBoard.getChessman(self._pos)
 		assert chessman != None
 		imgFile = "./IMG/curPos-cyan.png"
@@ -198,6 +200,6 @@ class BoardStageQuantum(BoardStageInterface):
 				if chessman.ChessMoveJudge(pos) == 1:
 					img, rc = load_image(imgFile, 0xffffff)
 					window.blit(img, posToLeftTop(pos))
-		for pos in chessman.getSupLocationList():
+		for pos in chessman.getSupLocationList(mgr):
 			img, rc = load_image("./IMG/curPos-yellow.png", 0xffffff)
 			window.blit(img, posToLeftTop(pos))
