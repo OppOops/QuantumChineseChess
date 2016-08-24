@@ -26,25 +26,26 @@ class ChessBoard:
 	
 	def resetBorad(self):
 		self.mgr          = ObjectManager()
-		self._board       = ChessBoardStart.initBoard()
+		self._board       = ChessBoardStart.initBoard(self)
 		self.curStepColor = ChessBoardStart.initColor()
 		cb = ClassicalChessBuilder(self.mgr)
-		for pos, chess in self._board:
-			self._board[pos] = cb.build(chess)
+		nb = NodeBuilder(self.mgr)
+		for pos, chess in self._board.items():
+			self._board[pos] = cb.build(chess, nb).id
+		
 	
 	def __redrawBorad(self, window):
-		
 		window.fill((0,0,0))
 		window.blit(self.ground, (0, 0))
 		self.window = window
 		#顯示所有棋子
 		font = pygame.font.SysFont('Arial', 24)
 		for key in self._board.keys():
-			chessman = self._getChess(Position(key))
+			chessman = self._getChess(Position(*key))
 			if chessman == None:
 				continue
 			leftTop = posToLeftTop(Position(key[0], key[1]))
-			image, rc = chessman.getImage()
+			image, rc = chessman.getImage(self.mgr)
 			window.blit(image, leftTop)
 			if chessman.color == self.curStepColor:
 				window.blit(self.circle, leftTop)
@@ -81,7 +82,7 @@ class ChessBoard:
 		chessman = self._getChess(pos)
 		if self.condition.entangleCondition(pos, posTo):
 			p1 = [pos, posTo]
-			self.EntangleGen(chessman, posTo, isQuantum=False, p1)
+			self.EntangleGen(chessman, posTo, False, p1)
 			return
 		
 		measureList = self._getChessmanList( [pos] + chessman.Path(pos, posTo) + [posTo] )
@@ -111,11 +112,11 @@ class ChessBoard:
 		if Econd(pos, mpos, chessman) and Econd(mpos, posTo, chessman):
 			p1 = [pos, mpos]
 			p2 = [mpos, posTo]
-			self.EntangleGen(chessman, posTo, isQuantum=True, p1, p2)
+			self.EntangleGen(chessman, posTo, True, p1, p2)
 		elif Econd(pos, mpos, chessman):
-			self.EntangleGen(chessman, posTo, isQuantum=True, p1=[pos, mpos])
+			self.EntangleGen(chessman, posTo, True, p1=[pos, mpos])
 		elif Econd(mpos, posTo, chessman):
-			self.EntangleGen(chessman, posTo, isQuantum=True, p1=[mpos, posTo])
+			self.EntangleGen(chessman, posTo, True, p1=[mpos, posTo])
 		else:
 			self.QuantumChessGen(chessman, posTo)
 		
@@ -139,7 +140,7 @@ class ChessBoard:
 		return copy.copy(self._getChess(pos))
 	
 	def _getChess(self, pos): #private API
-		id = self._board.get(pos.toList(), -1)
+		id = self._board.get(pos.toList(), -1)	
 		return self.mgr.get(id)
 
 	def _getChessmanList(self, posList):

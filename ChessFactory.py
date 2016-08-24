@@ -6,40 +6,40 @@ from SuperPosition import *
 
 class ChessBoardStart:
 	@staticmethod
-	def initBoard():
+	def initBoard(board):
 		return {
-		   (0, 0):ChessmanJu(self, CHESSMAN_COLOR_RED,0, 0),  \
-		   (0, 1):ChessmanMa(self, CHESSMAN_COLOR_RED,      0, 1),  \
-		   (0, 2):ChessmanXiang(self, CHESSMAN_COLOR_RED,   0, 2),  \
-		   (0, 3):ChessmanShi(self, CHESSMAN_COLOR_RED,     0, 3),  \
-		   (0, 4):ChessmanJiang(self, CHESSMAN_COLOR_RED,   0, 4),  \
-		   (0, 5):ChessmanShi(self, CHESSMAN_COLOR_RED,     0, 5),  \
-		   (0, 6):ChessmanXiang(self, CHESSMAN_COLOR_RED,   0, 6),  \
-		   (0, 7):ChessmanMa(self, CHESSMAN_COLOR_RED,      0, 7),  \
-		   (0, 8):ChessmanJu(self, CHESSMAN_COLOR_RED,      0, 8),  \
-		   (9, 0):ChessmanJu(self, CHESSMAN_COLOR_BLACK,    9, 0 ),  \
-		   (9, 1):ChessmanMa(self, CHESSMAN_COLOR_BLACK,    9, 1),  \
-		   (9, 2):ChessmanXiang(self, CHESSMAN_COLOR_BLACK, 9, 2),  \
-		   (9, 3):ChessmanShi(self, CHESSMAN_COLOR_BLACK,   9, 3),  \
-		   (9, 4):ChessmanJiang(self, CHESSMAN_COLOR_BLACK, 9, 4),  \
-		   (9, 5):ChessmanShi(self, CHESSMAN_COLOR_BLACK, 9, 5),  \
-		   (9, 6):ChessmanXiang(self, CHESSMAN_COLOR_BLACK, 9, 6),  \
-		   (9, 7):ChessmanMa(self, CHESSMAN_COLOR_BLACK, 9, 7),  \
-		   (9, 8):ChessmanJu(self, CHESSMAN_COLOR_BLACK, 9, 8),  \
-		   (2, 1):ChessmanPao(self, CHESSMAN_COLOR_RED, 2, 1),  \
-		   (2, 7):ChessmanPao(self, CHESSMAN_COLOR_RED, 2, 7),  \
-		   (7, 1):ChessmanPao(self, CHESSMAN_COLOR_BLACK, 7, 1),  \
-		   (7, 7):ChessmanPao(self, CHESSMAN_COLOR_BLACK, 7, 7),  \
-		   (3, 0):ChessmanBing(self, CHESSMAN_COLOR_RED, 3, 0),  \
-		   (3, 2):ChessmanBing(self, CHESSMAN_COLOR_RED, 3, 2),  \
-		   (3, 4):ChessmanBing(self, CHESSMAN_COLOR_RED, 3, 4),  \
-		   (3, 6):ChessmanBing(self, CHESSMAN_COLOR_RED, 3, 6),  \
-		   (3, 8):ChessmanBing(self, CHESSMAN_COLOR_RED, 3, 8),  \
-		   (6, 0):ChessmanBing(self, CHESSMAN_COLOR_BLACK, 6, 0),  \
-		   (6, 2):ChessmanBing(self, CHESSMAN_COLOR_BLACK, 6, 2),  \
-		   (6, 4):ChessmanBing(self, CHESSMAN_COLOR_BLACK, 6, 4),  \
-		   (6, 6):ChessmanBing(self, CHESSMAN_COLOR_BLACK, 6, 6),  \
-		   (6, 8):ChessmanBing(self, CHESSMAN_COLOR_BLACK, 6, 8),  \
+		   (0, 0):ChessmanJu(board, CHESSMAN_COLOR_RED,0, 0),  \
+		   (0, 1):ChessmanMa(board, CHESSMAN_COLOR_RED,      0, 1),  \
+		   (0, 2):ChessmanXiang(board, CHESSMAN_COLOR_RED,   0, 2),  \
+		   (0, 3):ChessmanShi(board, CHESSMAN_COLOR_RED,     0, 3),  \
+		   (0, 4):ChessmanJiang(board, CHESSMAN_COLOR_RED,   0, 4),  \
+		   (0, 5):ChessmanShi(board, CHESSMAN_COLOR_RED,     0, 5),  \
+		   (0, 6):ChessmanXiang(board, CHESSMAN_COLOR_RED,   0, 6),  \
+		   (0, 7):ChessmanMa(board, CHESSMAN_COLOR_RED,      0, 7),  \
+		   (0, 8):ChessmanJu(board, CHESSMAN_COLOR_RED,      0, 8),  \
+		   (9, 0):ChessmanJu(board, CHESSMAN_COLOR_BLACK,    9, 0 ),  \
+		   (9, 1):ChessmanMa(board, CHESSMAN_COLOR_BLACK,    9, 1),  \
+		   (9, 2):ChessmanXiang(board, CHESSMAN_COLOR_BLACK, 9, 2),  \
+		   (9, 3):ChessmanShi(board, CHESSMAN_COLOR_BLACK,   9, 3),  \
+		   (9, 4):ChessmanJiang(board, CHESSMAN_COLOR_BLACK, 9, 4),  \
+		   (9, 5):ChessmanShi(board, CHESSMAN_COLOR_BLACK, 9, 5),  \
+		   (9, 6):ChessmanXiang(board, CHESSMAN_COLOR_BLACK, 9, 6),  \
+		   (9, 7):ChessmanMa(board, CHESSMAN_COLOR_BLACK, 9, 7),  \
+		   (9, 8):ChessmanJu(board, CHESSMAN_COLOR_BLACK, 9, 8),  \
+		   (2, 1):ChessmanPao(board, CHESSMAN_COLOR_RED, 2, 1),  \
+		   (2, 7):ChessmanPao(board, CHESSMAN_COLOR_RED, 2, 7),  \
+		   (7, 1):ChessmanPao(board, CHESSMAN_COLOR_BLACK, 7, 1),  \
+		   (7, 7):ChessmanPao(board, CHESSMAN_COLOR_BLACK, 7, 7),  \
+		   (3, 0):ChessmanBing(board, CHESSMAN_COLOR_RED, 3, 0),  \
+		   (3, 2):ChessmanBing(board, CHESSMAN_COLOR_RED, 3, 2),  \
+		   (3, 4):ChessmanBing(board, CHESSMAN_COLOR_RED, 3, 4),  \
+		   (3, 6):ChessmanBing(board, CHESSMAN_COLOR_RED, 3, 6),  \
+		   (3, 8):ChessmanBing(board, CHESSMAN_COLOR_RED, 3, 8),  \
+		   (6, 0):ChessmanBing(board, CHESSMAN_COLOR_BLACK, 6, 0),  \
+		   (6, 2):ChessmanBing(board, CHESSMAN_COLOR_BLACK, 6, 2),  \
+		   (6, 4):ChessmanBing(board, CHESSMAN_COLOR_BLACK, 6, 4),  \
+		   (6, 6):ChessmanBing(board, CHESSMAN_COLOR_BLACK, 6, 6),  \
+		   (6, 8):ChessmanBing(board, CHESSMAN_COLOR_BLACK, 6, 8),  \
 		}
 	@staticmethod
 	def initColor():
@@ -55,7 +55,7 @@ class ChessmanBuilder:
 	def buildNode(self, chess, chessTo, builder):
 		return builder.build(chess, chessTo)
 		
-	def build(self, chess, builder=NodeBuilder(), pos=None):
+	def build(self, chess, builder, pos=None):
 		newChess = self.buildChess(chess, pos)
 		nodeID   = self.buildNode(chess, newChess, builder)
 		self.setSuperpos(newChess, nodeID)
@@ -67,7 +67,7 @@ class ClassicalChessBuilder(ChessmanBuilder):
 		return chess
 		
 	def setSuperpos(self, chess, nodeID):
-		sup       = SuperPosition(chess.id, self.mgr)
+		sup       = SuperPosition(chess.id, nodeID)
 		supID     = self.mgr.add(sup)
 		chess.sid = supID
 
@@ -89,7 +89,7 @@ class NodeBuilder:
 		pass
 	def setRelation(self, chess, nodeID):
 		pass
-	def buildNode(self, chess, chessTo)
+	def buildNode(self, chess, chessTo):
 		newNode = Node(chessTo.id)
 		nodeID  = self.mgr.add(newNode)
 		return newNode, nodeID

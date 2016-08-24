@@ -13,14 +13,14 @@ class Chessman:
 	_kind = None
 	_removed    = False
 	
-	def getImage(self):
+	def getImage(self, manager):
 		'''
 		根据棋子类型和棋子颜色获得棋子图片对象
 		'''
 		filename = './IMG/' + self._ColorFileText[self.color] + '_' + self.kindText() + '.png'
 		writeErrorLog(filename)
 		image = load_image(filename)
-		if self.hasSuperpositions():
+		if self.hasSuperpositions(manager):
 			alpha = 195+60*self._probability
 			image[0].fill((200, 200, 200, alpha), None, pygame.BLEND_RGBA_MULT)
 		return (image[0], image[1])
@@ -48,9 +48,10 @@ class Chessman:
 	def isPathClear(self, source, target):
 		#判斷移動路徑上的障礙，如果有非superPosition的棋，則無法移動
 		#若有自己的分身(superposition, entanglement)存在，則略過不計
+		manager   = self._board.getManager()
 		chessList = self.chessBetweenPath(source, target)
 		for chess in chessList:
-			if chess.hasSuperpositions() == False:
+			if chess.hasSuperpositions(manager) == False:
 				return False
 		return True
 		
@@ -83,7 +84,7 @@ class Chessman:
 
 	# Move piece classically, no checking.
 	def getPos(self):
-		return Position(self._pos)
+		return Position(*self._pos)
 	
 	def getProbability(self, manager):
 		sup = manager.get(self.sid)
@@ -125,9 +126,7 @@ class Chessman:
 		return kind
 		
 	def printInfo(self):
-		info = self._ColorText[self.color] + self.kindText() + ", superposition: "
-		for c in self._superpositions:
-			info += c.getPos().str() + "*" + str(c._probability) + " "
+		info = self._ColorText[self.color] + self.kindText()
 		return info
 		
 class ChessObserver:
