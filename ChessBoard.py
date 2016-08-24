@@ -2,7 +2,6 @@
 import sys, string, os
 import pygame
 import copy
-import random
 from types import *
 from pygame.locals import *
 from ChessGlobal import *
@@ -18,7 +17,6 @@ class ChessBoard:
 	showProb = False
 	
 	def __init__(self, ground_image, circleImg):
-		random.seed()
 		self.ground    = ground_image
 		self.circle    = circleImg
 		self.condition = ChessBoardCondition(self)
@@ -98,7 +96,7 @@ class ChessBoard:
 		if(chessman == None):
 			return
 		if(chessman.ChessMoveJudge(posTo)):
-			self._board[posTo.toList()] = chessman
+			self._board[posTo.toList()] = chessman.id
 			chessman.move(posTo)
 			self._board[pos.toList()]  = None
 		if isinstance(chessmanTo, ChessmanJiang):
@@ -148,21 +146,21 @@ class ChessBoard:
 		return [ ch for ch in chessList if ch!=None]
 		
 	def measure(self, measureList):
-		observer = ChessObserver(self)
+		observer = ChessObserver()
 		for ch in measureList:
 			ch.measure(observer, self.mgr)
 		self.checkDependency(observer)
 		return observer.getResult()
 	
 	def checkDependency(self, observer):
-		allChess = [ self.mgr.get(id) for id in self.__board.values() if id]
+		allChess = [ self.mgr.get(id) for id in self._board.values() if id]
 		allChess = [ ch for ch in allChess if ch._removed==False ]
-		allSup   = list(set([ch.sid for ch in allChess]))
+		allSup   = list(set([self.mgr.get(ch.sid) for ch in allChess]))
 		for sup in allSup:
 			sup.checkDependency(observer, self.mgr)
 	
 	def EntangleGen(self, chess, TargetPos, isQuantum, p1=[], p2=[]):
-		observer = ChessObserver(self)
+		observer = ChessObserver()
 		factory  = ChessFactory(self)
 		newChess = factory.buildChess(chess, TargetPos, isQuantum, p1, p2)
 		
@@ -170,7 +168,7 @@ class ChessBoard:
 		self.updateChessBoard(observer.getResult())
 		
 	def QuantumChessGen(self, chess, TargetPos):
-		observer = ChessObserver(self)
+		observer = ChessObserver()
 		factory  = ChessFactory(self)
 		newChess = factory.buildChess(chess, TargetPos, True)
 		
@@ -195,8 +193,14 @@ class ChessBoardCondition: #判斷盤面情況，不會修改到盤面
 		newBoard   = copy.copy(self.__board._board)
 		newManager = copy.copy(self.__board.mgr)
 		moveColor = self.__board.curStepColor
-		for key,val in newManager.list.items():
-			newManager.list[key] = copy.copy(val)
+		newManager.list = dict()
+		for key,val in self.__board.mgr.list.items():
+			if isinstance(val, Chessman):
+				newVal = copy.copy(val)
+				newVal._board = self
+			else:
+				newVal = copy.deepcopy(val)
+			newManager.list[key] = newVal
 		return {'board':newBoard,
 			    'color':moveColor,
 				'manager':newManager}

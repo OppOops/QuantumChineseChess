@@ -74,12 +74,13 @@ class ClassicalChessBuilder(ChessmanBuilder):
 class QuantumChessBuilder(ChessmanBuilder):
 	def buildChess(self, chess, pos):
 		newChess = copy.copy(chess)
+		newChess.id  = self.mgr.add(newChess)
 		newChess.move(pos)
 		return newChess
 		
 	def setSuperpos(self, chess, nodeID):
-		sup       = chess.getSuperposition()
-		sup.create(chess.id, nodeID)
+		sup       = chess.getSuperposition(self.mgr)
+		sup.add(chess.id, nodeID)
 
 		
 class NodeBuilder:
@@ -95,13 +96,16 @@ class NodeBuilder:
 		return newNode, nodeID
 	def getTopNode(self, chess):
 		sup    = chess.getSuperposition(self.mgr)
-		nodeID = sup.getNode(chess.id)[0]
+		nodeID = sup.getNode(chess.id)
 		return self.mgr.get(nodeID)
+	def getTopNodeID(self, chess):
+		sup    = chess.getSuperposition(self.mgr)
+		return sup.getNode(chess.id)
 	def build(self, chess, chessTo):
-		newNode, nodeID = self.buildNode(chess, chessTo)
+		newNode, newNodeID = self.buildNode(chess, chessTo)
 		self.setProb(chess, newNode)
-		self.setRelation(chess, nodeID)
-		return nodeID
+		self.setRelation(chess, newNodeID)
+		return newNodeID
 
 class QuantumTopNodeBuilder(NodeBuilder):
 	def setProb(self, chess, newNode):
@@ -113,8 +117,8 @@ class QuantumTopNodeBuilder(NodeBuilder):
 		
 class QuantumSubNodeBuilder(NodeBuilder):
 	def buildNode(self, chess, chessTo):
-		newNode = Node(chessTo.id, parent=chess.id)
-		nodeID  = manager.add(newNode)
+		newNode = Node(chessTo.id, parent=self.getTopNodeID(chess))
+		nodeID  = self.mgr.add(newNode)
 		return newNode, nodeID
 	def setProb(self, chess, newNode):
 		sourceNode          = self.getTopNode(chess)
@@ -122,7 +126,7 @@ class QuantumSubNodeBuilder(NodeBuilder):
 		newNode.showProb    = sourceNode.showProb / 2
 		sourceNode.showProb = sourceNode.showProb / 2
 	def setRelation(self, chess, nodeID):
-		sourceNode          = self.getTopNode(chess)
+		sourceNode = self.getTopNode(chess)
 		sourceNode.children.append(nodeID)
 	
 		
@@ -131,16 +135,18 @@ class ClassicalEntangleNodeBuilder(QuantumSubNodeBuilder):
 		self.mgr       = manager
 		self.chessList = chessList
 		
-	def buildNode(self, chess, chessTo, manager):
-		newNode = ClassicalNode(chess.id, chessTo.id, path=self.chessList)
+	def buildNode(self, chess, chessTo):
+		parentNodeID = self.getTopNodeID(chess)
+		newNode = ClassicalNode(parentNodeID, chessTo.id, path=self.chessList)
 		nodeID  = self.mgr.add(newNode)
-		return nodeID
+		return newNode, nodeID
 		
 class QuantumEntangleNodeBuilder(ClassicalEntangleNodeBuilder):
-	def buildNode(self, chess, chessTo, manager):
-		newNode = QuantumNode(chess.id, chessTo.id, path=self.chessList)
+	def buildNode(self, chess, chessTo):
+		parentNodeID = self.getTopNodeID(chess)
+		newNode = QuantumNode(parentNodeID, chessTo.id, path=self.chessList)
 		nodeID  = self.mgr.add(newNode)
-		return nodeID
+		return newNode, nodeID
 		
 class ChessFactory:
 	def __init__(self, chessboard):
@@ -171,10 +177,10 @@ class ChessFactory:
 		chessList = [ ch.id for ch in chessList if ch ]
 		return chessList
 	
-	def nodeTypeSelect(chess, isQuantum, p1, p2):
+	def nodeTypeSelect(self, chess, isQuantum, p1, p2):
 		pathData = self.getPath(chess, p1) + self.getPath(chess, p2)
 		
-		if p1==[] and p2==[] and chess.isAbleToGenTopNode():
+		if p1==[] and p2==[] and chess.isAbleToGenTopNode(self.mgr):
 			return 'QuantumTopNode', pathData
 		elif p1==[] and p2==[]:
 			return 'QuantumSubNode', pathData

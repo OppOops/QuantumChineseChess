@@ -1,24 +1,26 @@
 #-*- encoding: utf-8 -*-
+import random
 from ObjectManager import *
 from Chessman import ChessObserver
 
 class SuperPosition:
 	def __init__(self, chessID, nodeID):
+		random.seed()
 		self.nodeList  = { chessID: nodeID }
 	
-	def getNode(self, ChessID):
-		return self.nodeList.get(ChessID, None)
+	def getNode(self, chessID):
+		return self.nodeList.get(chessID, None)
 	
 	def getProb(self, chessID, manager):
-		nodeID = self.nodeList.get(chessID, -1)
+		nodeID = self.getNode(chessID)
 		node   = manager.get(nodeID)
 		return node.getProb()
 	
-	def add(self, ChessID, nodeID):
+	def add(self, chessID, nodeID):
 		if self.getNode(chessID) == None:
 			self.nodeList[chessID] = nodeID
 
-	def __distributeProb(self, ChessID, manager):
+	def __distributeProb(self, chessID, manager):
 		allNode = [ manager.get(nodeID) for nodeID in self.nodeList.values()]
 		allTopNode = [ node for node in allNode if node.parent==None]
 		removedNodeID = self.getNode(chessID)
@@ -28,19 +30,23 @@ class SuperPosition:
 		for n in allTopNode:
 			n.setProb( n.prob + (n.prob * ratio) )
 	
-	def remove(self, ChessID, observer, manager, distribute=False):
+	def remove(self, chessID, observer, manager, distribute=False):
+		print 'Before:',self.nodeList
+		print 'remove:',self.getNode(chessID),manager.get(chessID).getPos().toList()
+		
 		if(self.getNode(chessID))==None:
 			return
 		if(distribute):
-			self.__distributeProb(ChessID, manager)
-		removedNodeID    = self.getNode(ChessID)
+			self.__distributeProb(chessID, manager)
+		removedNodeID    = self.getNode(chessID)
 		removedNode      = manager.get(removedNodeID)
 		removedChessIDs  = removedNode.destruct(observer, manager)
 		for id in removedChessIDs:
 			self.nodeList.pop(id, None)
+		print 'After:',self.nodeList
 	
 	def removeAll(self, observer, manager, remain):
-		for cid, nid in self.NodeList.items():
+		for cid, nid in self.nodeList.items():
 			if cid != remain:
 				removedNode = manager.get(nid)
 				removedNode.destruct(observer, manager)
@@ -68,27 +74,28 @@ class SuperPosition:
 			result = topNode.execute(1.0, chessID, observer, manager, remover=self.remove, realProb=prob)
 			if result.onPos() == False:
 				return False
-			self.removeAll(observer, manager, remain=nodeID)
+			self.removeAll(observer, manager, remain=chessID)
 			return True
 		else:
 			self.remove(chessID, observer, manager, distribute=True)
 			return False
 			
-	def checkDependency(observer, manager):
-		for cid, nid in self.nodeList.items():
-			node = manager.get(nid)
+	def checkDependency(self, observer, manager):
+		topNodes = [ manager.get(nid) for nid in self.nodeList.values()]
+		topNodes = [ node for node in topNodes if node.parent==None]
+		for node in topNodes:
 			node.checkDependency(observer, manager, remover=self.remove)
 			
 class MeasureResult:
 	def __init__(self, onPos, prob=0.0, type=None):
 		self.on   = onPos
 		self.prob = prob
-		self.type = self.type
+		self.type = type
 	def onPos(self):
 		return self.on
 	def isChildRemoved(self):
 		return type=='ClassicalNode' and self.onPos()
-	def prob(self):
+	def getProb(self):
 		if type == None or type=='ClassicalNode':
 			return 0.0
 		else:
@@ -100,7 +107,7 @@ class Node:
 		self.prob       = prob
 		self.showProb   = prob
 		self.parent     = parent
-		self.children   = children
+		self.children   = list(children)
 		self.isEntangle = False
 	
 	def setProb(self, prob):
@@ -112,7 +119,12 @@ class Node:
 	def getPos(self, manager):
 		chess = manager.get(self.cid)
 		return chess.getPos()
-	
+		
+	def getNID(self, manager):
+		chess = manager.get(self.cid)
+		sup   = chess.getSuperposition(manager)
+		return sup.getNode(self.cid)
+		
 	def destruct(self, observer, manager):
 		chess       = manager.get(self.cid)
 		result      = [self.cid]
@@ -164,9 +176,9 @@ class Node:
 			if result.onPos():
 				if result.type != 'ClassicalNode':
 					topList.append(nodeID)
-				self.setProb( (self.prob / 2) + result.prob() )
+				self.setProb( (self.prob / 2) + result.getProb() )
 			else:
-				self.children = topList
+				self.children = topList + self.children
 				return MeasureResult(onPos=False)
 		return self.reJudge(realProb, observer, manager, remover, topList)
 
@@ -181,8 +193,6 @@ class Node:
 		
 class EntangleNode(Node):
 	def __init__(self, s1, s2, prob=1.0, path=[]):
-		self.s1 = s1
-		self.s2 = s2
 		self.cid = s2
 		self.prob       = prob
 		self.showProb   = prob
@@ -190,24 +200,20 @@ class EntangleNode(Node):
 		self.children   = []
 		self.cpath      = path
 		self.isEntangle = True
+		
 	def goDown(self, observer, manager, remover, isExec=False):
 		pass
 	def stay(self, observer, manager, remover, isExec=False):
 		pass
-		
-	def getNID(self, manager):
-		chess = manager.get(self.cid)
-		sup   = chess.getSuperposition(manager)
-		return sup.getNode(self.cid)
 	
 	def solveMiddle(self, observer, manager):
-		for ChessID in self.cpath:
+		for chessID in self.cpath:
 			chess  = manager.get(chessID)
 			chess.measure(observer, manager)
 	
 	def isPathClear(self, manager):
 		isClear = True
-		for ChessID in self.cpath:
+		for chessID in self.cpath:
 			chess   = manager.get(chessID)
 			isClear = isClear and chess._removed 
 			if chess.isDetermined(manager):
@@ -217,16 +223,16 @@ class EntangleNode(Node):
 	def updateStayParent(self, manager, isExec):
 		parentNode = manager.get(self.parent)
 		parentNode.showProb = self.prob * 2
-		startIdx   = parentNode.children.index(self.getNID())
+		startIdx   = parentNode.children.index(self.getNID(manager))
 		for i in range(startIdx+1, len(parentNode.children)):
 			childNode = manager.get(parentNode.children[i])
 			childNode.setProb(parentNode.showProb / 2)
 			parentNode.showProb = parentNode.showProb / 2
 		if isExec == False:
-			parentNode.children.remove(self.getNID())
+			parentNode.children.remove(self.getNID(manager))
 	
-	def updateParentTopList(self, manager, isExec):
-		if isExec:
+	def updateParentTopList(self, manager, isExec, isClassical=False):
+		if isExec and not isClassical:
 			return
 		parentNode = manager.get(self.parent)
 		tmpList    = parentNode.children
@@ -236,12 +242,13 @@ class EntangleNode(Node):
 				break
 			childNode.parent = None
 			tmpList = parentNode.children[idx+1:]
+			parentNode.setProb( childNode.prob )
 		parentNode.children = tmpList
 	
 	def sovleDependency(self, observer, manager, remover):
 		if self.isPathClear(manager):
 			self.goDown(observer, manager, remover)
-		for ChessID in self.cpath:
+		for chessID in self.cpath:
 			chess   = manager.get(chessID)
 			if chess.isDetermined(manager):
 				self.stay(observer, manager, remover)
@@ -261,25 +268,24 @@ class ClassicalNode(EntangleNode):
 		parentChess = manager.get(parentNode.cid)
 		TargetChess = manager.get(self.cid)
 		posTo       = TargetChess.getPos()
-		parentChess.move(posTo)
-		observer.moveChess(parentChess, parentChess.getPos(), posTo, parentChess.prob==1.0)	
+		TargetChess.move(parentChess.getPos())
+		observer.moveChess(parentChess, parentChess.getPos(), posTo, parentNode.prob==1.0)	
 		
 	def goDown(self, observer, manager, remover, isExec=False):
 		parentNode = manager.get(self.parent)
 		parentNode.showProb = self.prob * 2
-		startIdx = parentNode.children.index(self.getNID())
+		startIdx = parentNode.children.index(self.getNID(manager))
 		for i in range(startIdx+1, len(parentNode.children)):
 			remover(parentNode.children[i], observer, manager, distribute=False)
 		parentNode.children = parentNode.children[0:startIdx]
-		parentNode.children.remove(self.getNID())
 		for nid in self.children:
 			childNode = manager.get(nid)
 			childNode.setProb(childNode.prob * 2)
 		parentNode.children.extend(self.children)
 		self.children = []
 		self.moveParent(observer, manager)
+		self.updateParentTopList(manager, isExec, isClassical=True)
 		remover(self.cid, observer, manager, distribute=False)
-		self.updateParentTopList(manager, isExec)
 		return MeasureResult(onPos=False, prob=0.0, type='ClassicalNode')
 		
 	def stay(self, observer, manager, remover, isExec=False):
@@ -293,15 +299,16 @@ class QuantumNode(EntangleNode):
 		return manager.add(newNode)
 		
 	def updateSuperPosition(self, manager):
+		oldNodeID = self.getNID(manager)
 		newNodeID = self.createNewNode(manager)
 		chess = manager.get(self.cid)
 		sup   = chess.getSuperposition(manager)
-		sup[chess.id] = newNodeID
+		sup.nodeList[chess.id] = newNodeID
 		for nid in self.children:
 			node = manager.get(nid)
 			node.parent = newNodeID
 		parentNode = manager.get(self.parent)
-		idx        = parentNode.children.index(self.getNID())
+		idx        = parentNode.children.index(oldNodeID)
 		parentNode.children[idx] = newNodeID
 		
 	def goDown(self, observer, manager, remover, isExec=False):

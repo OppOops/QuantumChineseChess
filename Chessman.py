@@ -21,7 +21,7 @@ class Chessman:
 		writeErrorLog(filename)
 		image = load_image(filename)
 		if self.hasSuperpositions(manager):
-			alpha = 195+60*self._probability
+			alpha = 195+60*self.getProbability(manager)
 			image[0].fill((200, 200, 200, alpha), None, pygame.BLEND_RGBA_MULT)
 		return (image[0], image[1])
 	
@@ -143,6 +143,7 @@ class ChessObserver:
 			self.determined[ch.id]               = False
 	
 	def moveChess(self, chess, pos, posTo, isDetermined=False):
+		chess.move(posTo)
 		self.resultMap[pos.toList()]   = None
 		self.resultMap[posTo.toList()] = chess.id
 		if isDetermined:
