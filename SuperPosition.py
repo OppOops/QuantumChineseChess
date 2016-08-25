@@ -68,6 +68,7 @@ class SuperPosition:
 			return False
 		if self.determine(nodeID, observer, manager) == False:
 			return False
+		nodeID = self.getNode(chessID) #nodeID can be changed
 		topNode = manager.get(nodeID)
 		if(topNode.binomial()):
 			prob = topNode.prob

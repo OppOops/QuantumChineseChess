@@ -202,10 +202,13 @@ class ChessmanMa(Chessman):
 		if self.getPos().rowDist(posTo) == 1:
 			x = self.getPos().row
 			y = (self.getPos().col + posTo.col) // 2
+			return [Position(x, y)]
 		elif self.getPos().colDist(posTo) == 1:
 			y = self.getPos().col
 			x = (self.getPos().row + posTo.row) // 2
-		return [Position(x, y)]
+			return [Position(x, y)]
+		else:
+			return []
 		
 	def ChessMoveJudge(self, posTo):
 		if not (self.getPos().rowDist(posTo) > 0 and self.getPos().colDist(posTo) > 0 and

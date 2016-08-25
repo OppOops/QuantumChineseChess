@@ -79,6 +79,7 @@ class QuantumChessBuilder(ChessmanBuilder):
 		return newChess
 		
 	def setSuperpos(self, chess, nodeID):
+		print 'edge:',chess.id, nodeID
 		sup       = chess.getSuperposition(self.mgr)
 		sup.add(chess.id, nodeID)
 
@@ -88,7 +89,7 @@ class NodeBuilder:
 		self.mgr = manager
 	def setProb(self, chess, newNode):
 		pass
-	def setRelation(self, chess, nodeID):
+	def setRelation(self, chess, newNodeID):
 		pass
 	def buildNode(self, chess, chessTo):
 		newNode = Node(chessTo.id)
@@ -125,9 +126,9 @@ class QuantumSubNodeBuilder(NodeBuilder):
 		newNode.prob        = sourceNode.showProb / 2
 		newNode.showProb    = sourceNode.showProb / 2
 		sourceNode.showProb = sourceNode.showProb / 2
-	def setRelation(self, chess, nodeID):
+	def setRelation(self, chess, newNodeID):
 		sourceNode = self.getTopNode(chess)
-		sourceNode.children.append(nodeID)
+		sourceNode.children.append(newNodeID)
 	
 		
 class ClassicalEntangleNodeBuilder(QuantumSubNodeBuilder):
