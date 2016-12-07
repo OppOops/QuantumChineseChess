@@ -150,6 +150,7 @@ class Node:
 				remover(node.cid, observer, manager, distribute=False)
 			self.children = []
 			observer.append([manager.get(self.cid)], [])
+			self.setProb(1.0)
 			return MeasureResult(onPos=True)
 		else:
 			probList = []
