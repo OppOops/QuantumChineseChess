@@ -32,7 +32,7 @@ class SuperPosition:
 	
 	def remove(self, chessID, observer, manager, distribute=False):
 		print 'Before:',self.nodeList
-		print 'remove:',self.getNode(chessID),manager.get(chessID).getPos().toList()
+		print 'remove:',self.getNode(chessID),manager.get(chessID).getPos().toList(),distribute
 		
 		if(self.getNode(chessID))==None:
 			return
@@ -58,7 +58,7 @@ class SuperPosition:
 		if node.parent == None:
 			return True
 		while node.parent != None:
-			node = manager.get(node.parent)	
+			node = manager.get(node.parent)
 		self.measure(node.cid, observer, manager)
 		return self.getNode(subChess.id) != None
 				
