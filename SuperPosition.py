@@ -156,7 +156,7 @@ class Node:
 			self.children = []
 			for nodeID in topList:
 				node = manager.get(nodeID)
-				node.parent = -1
+				node.parent = None
 				node.setProb(node.prob * realProb)
 			self.setProb( (1-self.prob) * realProb)
 			remover(self.cid, observer, manager, distribute=True)
@@ -170,6 +170,7 @@ class Node:
 		if chessID != self.cid: #Upgrade to top node
 			return MeasureResult(onPos=True)
 		topList = []
+
 		for nodeID in self.children:
 			child  = manager.get(nodeID)
 			result = child.execute(self.prob/2, chessID, observer, manager, remover) 
@@ -210,7 +211,8 @@ class EntangleNode(Node):
 	def solveMiddle(self, observer, manager):
 		for chessID in self.cpath:
 			chess  = manager.get(chessID)
-			chess.measure(observer, manager)
+			if chess.isDetermined(manager)==False:
+				chess.measure(observer, manager)
 	
 	def isPathClear(self, manager):
 		isClear = True
@@ -223,6 +225,8 @@ class EntangleNode(Node):
 	
 	def updateStayParent(self, manager, isExec):
 		parentNode = manager.get(self.parent)
+		if parentNode == None:
+			return
 		parentNode.showProb = self.prob * 2
 		startIdx   = parentNode.children.index(self.getNID(manager))
 		for i in range(startIdx+1, len(parentNode.children)):
@@ -274,7 +278,7 @@ class ClassicalNode(EntangleNode):
 		
 	def goDown(self, observer, manager, remover, isExec=False):
 		parentNode = manager.get(self.parent)
-		parentNode.showProb = self.prob * 2
+		parentNode.showProb = self.prob
 		startIdx = parentNode.children.index(self.getNID(manager))
 		for i in range(startIdx+1, len(parentNode.children)):
 			remover(parentNode.children[i], observer, manager, distribute=False)
@@ -296,7 +300,8 @@ class ClassicalNode(EntangleNode):
 
 class QuantumNode(EntangleNode):
 	def createNewNode(self, manager):
-		newNode = Node(self.cid, self.prob, parent=self.parent, children=self.children)
+		parentNode = manager.get(self.parent)
+		newNode = Node(self.cid, self.prob, parent=parentNode.parent, children=self.children)
 		return manager.add(newNode)
 		
 	def updateSuperPosition(self, manager):
