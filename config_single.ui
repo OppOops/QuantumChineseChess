@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='utf-8'?>
+<interface>
+  <object class="ttk.Frame" id="Frame">
+    <property name="cursor">arrow</property>
+    <property name="height">200</property>
+    <property name="padding">18</property>
+    <property name="relief">groove</property>
+    <property name="takefocus">true</property>
+    <property name="width">150</property>
+    <layout>
+      <property name="column">0</property>
+      <property name="columnspan">1</property>
+      <property name="propagate">True</property>
+      <property name="row">0</property>
+      <property name="rowspan">1</property>
+      <rows>
+        <row id="0">
+          <property name="pad">0</property>
+        </row>
+      </rows>
+    </layout>
+    <child>
+      <object class="ttk.Button" id="OK_Button">
+        <property name="command">ok_event</property>
+        <property name="text" translatable="yes">Ok</property>
+        <property name="width">9</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="columnspan">1</property>
+          <property name="ipadx">0</property>
+          <property name="propagate">True</property>
+          <property name="row">4</property>
+          <property name="sticky">s</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Button" id="Cancel_Button">
+        <property name="command">cancel_event</property>
+        <property name="text" translatable="yes">Cancel</property>
+        <property name="width">7</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="propagate">True</property>
+          <property name="row">4</property>
+          <property name="sticky">se</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Label" id="Label_2">
+        <property name="text" translatable="yes">Color / Order :</property>
+        <property name="width">0</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="ipadx">0</property>
+          <property name="propagate">False</property>
+          <property name="row">1</property>
+          <property name="sticky">w</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Radiobutton" id="SecondOrder">
+        <property name="text" translatable="yes">Black</property>
+        <property name="value">2</property>
+        <property name="variable">int:colorOrder</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="ipadx">21</property>
+          <property name="propagate">True</property>
+          <property name="row">1</property>
+          <property name="sticky">e</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Radiobutton" id="FirstOrder">
+        <property name="text" translatable="yes">Red</property>
+        <property name="value">1</property>
+        <property name="variable">int:colorOrder</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="ipadx">18</property>
+          <property name="propagate">True</property>
+          <property name="row">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Radiobutton" id="RandomOrder">
+        <property name="text" translatable="yes">Random</property>
+        <property name="value">3</property>
+        <property name="variable">int:colorOrder</property>
+        <layout>
+          <property name="column">1</property>
+          <property name="ipadx">0</property>
+          <property name="propagate">True</property>
+          <property name="row">1</property>
+          <property name="sticky">w</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Checkbutton" id="ShowProbability">
+        <property name="offvalue">False</property>
+        <property name="onvalue">True</property>
+        <property name="text" translatable="yes">Show Probability of superposition</property>
+        <property name="variable">boolean:showProb</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="propagate">True</property>
+          <property name="row">2</property>
+          <property name="sticky">w</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Checkbutton" id="ShowEntanglement">
+        <property name="offvalue">False</property>
+        <property name="onvalue">True</property>
+        <property name="text" translatable="yes">Show entanglement connection between chess</property>
+        <property name="variable">boolean:showEnt</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="propagate">True</property>
+          <property name="row">3</property>
+          <property name="sticky">w</property>
+        </layout>
+      </object>
+    </child>
+  </object>
+</interface>

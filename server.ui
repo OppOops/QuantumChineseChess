@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='utf-8'?>
+<interface>
+  <object class="ttk.Frame" id="Frame">
+    <property name="cursor">arrow</property>
+    <property name="height">200</property>
+    <property name="padding">20</property>
+    <property name="relief">groove</property>
+    <property name="takefocus">true</property>
+    <property name="width">200</property>
+    <layout>
+      <property name="column">0</property>
+      <property name="columnspan">3</property>
+      <property name="propagate">True</property>
+      <property name="row">0</property>
+      <property name="rowspan">3</property>
+      <rows>
+        <row id="0">
+          <property name="pad">0</property>
+        </row>
+      </rows>
+    </layout>
+    <child>
+      <object class="ttk.Button" id="Cancel_Button">
+        <property name="command">cancel_event</property>
+        <property name="text" translatable="yes">Cancel</property>
+        <property name="width">7</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="columnspan">2</property>
+          <property name="ipadx">5</property>
+          <property name="propagate">True</property>
+          <property name="row">3</property>
+          <property name="sticky">s</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Label" id="Label_2">
+        <property name="text" translatable="yes">IP Address :</property>
+        <property name="width">11</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="pady">3</property>
+          <property name="propagate">True</property>
+          <property name="row">1</property>
+          <property name="sticky">w</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Label" id="Label_3">
+        <property name="text" translatable="yes">Port Number :</property>
+        <property name="width">12</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="pady">3</property>
+          <property name="propagate">True</property>
+          <property name="row">2</property>
+          <property name="sticky">w</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Label" id="ip_val">
+        <property name="textvariable">string:ip_address</property>
+        <property name="width">20</property>
+        <layout>
+          <property name="column">1</property>
+          <property name="propagate">True</property>
+          <property name="row">1</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Label" id="port_val">
+        <property name="textvariable">string:port_number</property>
+        <property name="width">20</property>
+        <layout>
+          <property name="column">1</property>
+          <property name="propagate">True</property>
+          <property name="row">2</property>
+        </layout>
+      </object>
+    </child>
+  </object>
+</interface>

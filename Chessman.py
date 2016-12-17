@@ -348,6 +348,11 @@ class ChessmanJiang(ChessmanJu):
 		countBetween = len(chessBetween)
 		if None == chessmanTo:
 			return 0
-		if (self.getPos().isSameCol(target)) and (CHESSMAN_KIND_JIANG == chessmanTo._kind) and (0 == countBetween):
+		elif CHESSMAN_KIND_JIANG != chessmanTo._kind or not(self.isSameLine(source, target)):
+			return 0
+		elif countBetween == 0 and self.isTargetClear(target):
 			return 1
-		return 0
+		elif self.isPathClear(source, target) and self.isTargetClear(target):
+			return 1
+		else:
+			return 0

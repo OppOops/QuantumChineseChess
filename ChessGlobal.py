@@ -26,7 +26,7 @@ def writeErrorLog(log):
 	'''
 	写错误日志
 	'''
-	file = open('error.log', 'w+')
+	file = open('error.log', 'a')
 	file.write(log)
 	file.close()
 

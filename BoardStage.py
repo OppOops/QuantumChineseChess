@@ -2,15 +2,91 @@
 import datetime  # for datetime
 from ChessGlobal import *  # for class Position, load_image
 from Chessman import * # for class ChessmanJiang
+from NetworkChs import *
+from Queue import Queue
+
+class NetworkController:
+	def __init__(self, stageCnt):
+		self.stage = stageCnt
+		self.p2p   = P2Pconnection()
+		self.flag  = Queue()
+		self.turn  = True
+		self.char  = None
+		
+	def setClient(self, address):
+		self.char = 'client'
+		return self.p2p.connect(address)
+		
+	def setServer(self, infoCallBack, proccedCallBack, queue):
+		self.char = 'server'
+		try:
+			return self.p2p.accept(info_callback = infoCallBack, \
+								   connected_callback = proccedCallBack, \
+								   queue = queue, \
+								   stopHandle = self.p2p.stopHandle)
+		except:
+			return None
+	
+	def setTurn(self, color):
+		if color == 1:
+			print 'First ', self.char
+			self.turn = True
+		else:
+			print 'Second ', self.char
+			self.p2p.recv(self.flag)
+			self.turn = False
+	
+	def determinTurn(self, config=None):
+		if(self.char == 'client'):
+			message = Queue()
+			thread = self.p2p.recv(queue=message)
+			thread.join()
+			color = message.get()
+			self.stage.setConfig({'colorOrder':color})
+			self.setTurn(color)
+		else:
+			color = config['colorOrder']
+			if(color==1):
+				color = 2
+			else:
+				color = 1
+			self.p2p.send(color)
+			self.setTurn(config['colorOrder'])
+	
+	def wait(self): #If Turn == False, wait oppent
+		if not self.flag.empty():
+			result = self.flag.get()
+			self.stage.setBoard(result)
+			self.turn  = True
+		return self.turn == False
+		
+	def act(self, rec):
+		self.p2p.send(rec)
+		self.p2p.recv(self.flag)
+		self.turn = False
 
 class StageController:
 	def __init__(self, chessBoard, cursorImg):
 		self.chessboard = chessBoard
 		self.curImg     = cursorImg
 		self.boardStage = BoardStageSelect(self, chessBoard, Position(-1, -1))
+		self.__defaultStage = BoardStageSelect(self, chessBoard, Position(-1, -1))
 		self.record     = PreviousBoardRecord()
+		self.net        = None
+	
+	def setConfig(self, config):
+		self.chessboard.rotateColor(config.get('colorOrder', 1))
+		if (config.get('colorOrder', 1)==2):
+			self.boardStage.setWait(True)
+		for key, value in config.iteritems():
+			setattr(self.chessboard, key, value)
+			
+	def setNetwork(self, controller):
+		self.net = controller
 	
 	def setStage(self, stage):
+		if (self.net != None) and (self.net.wait()):
+			stage.setWait(True)
 		self.boardStage = stage
 	
 	def getMousePos(self):
@@ -19,21 +95,38 @@ class StageController:
 		curCol = (xPos - 4) / 50
 		return Position(curRow, curCol)
 	
-	def act(self, mouseEvent, window):
-		if (mouseEvent) == False:
+	def act(self, mouseClick, window):
+		if (self.net!=None):
+			self.net.wait()
+		if (mouseClick) == False:
 			self.draw(None, window)
 			return
 		Pos = self.getMousePos()
 		if not Pos.isInBoarder():
 			return
 		rec = self.chessboard.condition.copyBoard()
-		if(self.boardStage.actChess(Pos, self)):
+		if(self.boardStage.actChess(Pos, self)): #True if board has changed
 			self.record.push(rec)
+			if(self.net != None):
+				self.boardStage.setWait(True)
+				self.net.act(self.chessboard.condition.serialize())
 		self.draw(posToLeftTop(Pos), window)
 		
-	def undo(self):
+	def undo(self, window):
+		if(self.net != None ):
+			return
 		if(self.record.undo(self.chessboard)):
 			self.boardStage = BoardStageSelect(self, self.chessboard, Position(-1, -1))
+			self.draw(posToLeftTop(Position(0,0)), window)
+	
+	def setBoard(self, state):
+		if(state.get('serialized', False)):
+			state = self.chessboard.condition.deSerialize(state)
+			self.boardStage = self.__defaultStage
+			self.boardStage.setWait(False)
+		self.chessboard._board       = state['board']
+		self.chessboard.curStepColor = state['color']
+		self.chessboard.mgr          = state['manager']
 	
 	def draw(self, CurPos, window):
 		self.chessboard.draw(window)
@@ -41,6 +134,7 @@ class StageController:
 		if CurPos != None:
 			window.blit(self.curImg, CurPos)
 			
+	
 class PreviousBoardRecord:
 	def __init__(self):
 		self.rep = []
@@ -58,7 +152,8 @@ class PreviousBoardRecord:
 class BoardStageInterface:
 	_chessBoard = None
 	_pos = None
-
+	_wait = False
+	
 	def __init__(self, controller, chessBoard, pos):
 		self._controller = controller
 		self._chessBoard = chessBoard
@@ -78,6 +173,13 @@ class BoardStageInterface:
 	# Get reference of current position
 	def getPos(self):
 		return self._pos
+		
+	def setWait(self, status):
+		self._wait = status
+		if(status==True):
+			self._chessBoard.setTip(None, self._wait)
+		else:
+			self._chessBoard.setTip('Your Turn', self._wait)
 
 
 class BoardStageSelect(BoardStageInterface):
@@ -90,7 +192,7 @@ class BoardStageSelect(BoardStageInterface):
 		#選中棋子，準備移動
 		chessman = self._condtion.getChessman(target)
 		if chessman != None:
-			self._chessBoard.setTip(chessman.printInfo())
+			self._chessBoard.setTip(chessman.printInfo(), self._wait)
 			controller.setStage(BoardStageClassical(controller, self._chessBoard, target))
 			return False
 		return False
@@ -110,15 +212,17 @@ class BoardStageClassical(BoardStageInterface):
 
 		if chessman.isSameColor(chessmanTo):
 			if not(target == source):
-				self._chessBoard.setTip(chessmanTo.printInfo())
+				self._chessBoard.setTip(chessmanTo.printInfo(), self._wait)
 				self._pos = target
 			elif chessman.crossRiverLimit():
 				return False
-			elif target == source:
+			elif target == source and self._wait == False:
 				controller.setStage(BoardStageQuantum(controller, self._chessBoard, source))
 			return False
 			
 		if chessman.ChessMoveJudge(target) != 1:
+			return False
+		if self._wait == True:
 			return False
 		#成功走棋
 		tipText = 'last move: %s, %s' %  (chessman.printInfo(), target.str())

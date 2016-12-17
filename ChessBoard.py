@@ -15,6 +15,9 @@ class ChessBoard:
 	tipInfo = ''
 	condition = None
 	showProb = False
+	showEnt = False
+	__dot   = 0
+	__wait   = 0
 	
 	def __init__(self, ground_image, circleImg):
 		self.ground    = ground_image
@@ -30,7 +33,6 @@ class ChessBoard:
 		nb = NodeBuilder(self.mgr)
 		for pos, chess in self._board.items():
 			self._board[pos] = cb.build(chess, nb).id
-		
 	
 	def __redrawBorad(self, window):
 		window.fill((0,0,0))
@@ -55,10 +57,12 @@ class ChessBoard:
 				window.blit(text, leftTop)
 		
 	def __showTipInfo(self, window):
+		self.__dot = (self.__dot + 1) * self.__wait % 60
+		dotStr     = '.' * (self.__dot // 15)
 		lines = self.tipInfo.split('\n')
 		count = 0
 		for ln in lines:
-			text, textpos = load_font(ln)
+			text, textpos = load_font(ln + dotStr)
 			textpos = Rect(0,532+count*20, 460, 28)
 			window.blit(text, textpos)
 			count += 1
@@ -66,9 +70,14 @@ class ChessBoard:
 	def draw(self, window):
 		self.__redrawBorad(window)
 		self.__showTipInfo(window)
-		
-	def setTip(self, tipText):
-		self.tipInfo = tipText
+	
+	def setTip(self, tipText, netWorkWaiting=False):
+		if not(netWorkWaiting):
+			self.__wait   = 0
+			self.tipInfo = tipText
+		else:
+			self.__wait   = 1
+			self.tipInfo = 'Waiting for oppnent' 
 	
 	def updateChessBoard(self, resultList): #should modify chess object before assign
 		for resPos, ref in resultList:
@@ -117,7 +126,11 @@ class ChessBoard:
 			self.EntangleGen(chessman, posTo, True, p1=[mpos, posTo])
 		else:
 			self.QuantumChessGen(chessman, posTo)
-		
+			
+	def rotateColor(self, colorOrder):
+		if colorOrder == 1:  # rotate
+			pass
+	
 	def __changeColor(self):
 		#换方下棋
 		if self.curStepColor == CHESSMAN_COLOR_BLACK:
@@ -188,6 +201,22 @@ class ChessBoardCondition: #判斷盤面情況，不會修改到盤面
 	def filterbySameSup(self, clist, ptr):
 		sup = ptr.sid
 		return [ch for ch in clist if ch.sid!=sup and ch.id!=ptr.id] 
+	
+	def serialize(self):
+		rec = self.copyBoard()
+		manager = rec['manager']
+		for key,val in manager.list.items():
+			if isinstance(val, Chessman):
+				val._board = None
+		rec['serialized'] = True
+		return rec
+		
+	def deSerialize(self, rec):
+		manager = rec['manager']
+		for key,val in manager.list.items():
+			if isinstance(val, Chessman):
+				val._board = self
+		return rec
 	
 	def copyBoard(self):
 		newBoard   = copy.copy(self.__board._board)
