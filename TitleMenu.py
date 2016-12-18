@@ -201,6 +201,7 @@ class ClientController:
 		self.dig.close()
 		
 	def cancel(self):
+		self.cancelFlag = True
 		self.dig.close()
 		
 	def createDialog(self):
@@ -318,12 +319,14 @@ class DialogController:
 			self.thread.stop()
 			
 class Dialog(Tkinter.Tk):
+	__path = 'IMG/'
+	
 	def __init__(self, UIfile, binding, title="Settings"):
 		Tkinter.Tk.__init__(self)
 		self.title(title)
 		self.resizable(width=Tkinter.FALSE, height=Tkinter.FALSE)
 		builder = pygubu.Builder()
-		builder.add_from_file(UIfile)
+		builder.add_from_file(self.__path + UIfile)
 		mainwindow = builder.get_object('Frame', self)
 		builder.connect_callbacks(binding)
 		self.builder = builder
