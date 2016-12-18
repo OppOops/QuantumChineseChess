@@ -10,22 +10,36 @@
   Other important feature is based on **entanglement**. Entanglement is happending if two undertermine chess stick together. In this case, 
   two chess location are depends on each other. The move is valid only if the measure process find out the obstacle does not exist.
   
+  For our social fan page, please checkout https://www.facebook.com/149258692216707/
+  
 ## Dependencies
 * Python 2
 * Pygame
 * PyOpenGL
-* Sip (Python package)
+* Sip (python package)
 * py2exe (only requrired for Winodws environment without python)
+
+## Current Features
+*Simple Player Game, Internet Game, GUI menu
+*Superposition, Entanglement for moveable chess
+*Probability simulation process
 
 ## Execution
 
 ```
-Python ChsChess.py
+python ChsChess.py
 ```
 
-
-## build as exe file
+## Build as exe file
 
 ```
-Python setup.py
+python setup.py
 ```
+Note:
+(1) 'py2exe' needs to install from http://sourceforge.net/project/showfiles.php?group_id=15583 
+	The above link is provided by https://pypi.python.org/pypi/py2exe/
+	
+(2) Sip in python 2 should compile from source code https://www.riverbankcomputing.com/software/sip/download/ 
+	and configure it with some C++ compiler, and apply MAKEFILE command 'make', 'make install' to install package
+	your machine. For futher detail, please see http://pyqt.sourceforge.net/Docs/sip4/installation.html
+	
