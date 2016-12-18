@@ -20,9 +20,9 @@
 * py2exe (only requrired for Winodws environment without python)
 
 ## Current Features
-*Simple Player Game, Internet Game, GUI menu
-*Superposition, Entanglement for moveable chess
-*Probability simulation process
+* Simple Player Game, Internet Game, GUI menu
+* Superposition, Entanglement for moveable chess
+* Probability simulation process
 
 ## Execution
 
@@ -36,6 +36,7 @@ python ChsChess.py
 python setup.py
 ```
 Note:
+
 (1) 'py2exe' needs to install from http://sourceforge.net/project/showfiles.php?group_id=15583 
 	The above link is provided by https://pypi.python.org/pypi/py2exe/
 	
