@@ -16,6 +16,7 @@
 * Python 2
 * Pygame
 * PyOpenGL
+* Pygubu
 * Sip (python package)
 * py2exe (only requrired for Winodws environment without python)
 
@@ -38,6 +39,7 @@ python setup.py
 Note:
 
 (1) 'py2exe' needs to install from http://sourceforge.net/project/showfiles.php?group_id=15583 
+
 	The above link is provided by https://pypi.python.org/pypi/py2exe/
 	
 (2) Sip in python 2 should compile from source code https://www.riverbankcomputing.com/software/sip/download/ 
