@@ -44,5 +44,5 @@ Note:
 	
 (2) Sip in python 2 should compile from source code https://www.riverbankcomputing.com/software/sip/download/ 
 	and configure it with some C++ compiler, and apply MAKEFILE command 'make', 'make install' to install package
-	your machine. For futher detail, please see http://pyqt.sourceforge.net/Docs/sip4/installation.html
+	your machine. For the detail steps of installation, please see http://pyqt.sourceforge.net/Docs/sip4/installation.html
 	
